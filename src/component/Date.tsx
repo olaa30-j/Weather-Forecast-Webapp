@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import cityTimezones from 'city-timezones';
 
-interface DateConfig {
+interface IDateConfig {
     city?: string;
 }
 
-const Date: React.FC<DateConfig> = ({ city }) => {
+const Date: React.FC<IDateConfig > = ({ city }) => {
     const [date, setDate] = useState(new globalThis.Date());
     const [timeZone, setTimeZone] = useState<string | undefined>(city);
 
@@ -44,7 +44,7 @@ const Date: React.FC<DateConfig> = ({ city }) => {
         hour12: true,
         hour: 'numeric',
         minute: 'numeric',
-        second: 'numeric'
+        // second: 'numeric'
     };
 
     const formatter = new Intl.DateTimeFormat('en-US', options);
@@ -54,8 +54,8 @@ const Date: React.FC<DateConfig> = ({ city }) => {
     const theDate = formatter.formatToParts(date).slice(8, ).map(part => part.value);
 
     return (
-        <div className="container mx-auto text-center">
-            <h3>{city}</h3>
+        <div className={`container mx-auto py-8 flex md:flex-initial md:w-[35%] flex-col text-center rounded-xl shadow-lg shadow-zinc-500/70 dark:shadow-zinc-950/80`}>
+            <h4 className="mb-10">{city}</h4>
             <h1>{theDate}</h1>
             <p>{dayOfTheWeek}, {Day} {month}</p>
         </div>
