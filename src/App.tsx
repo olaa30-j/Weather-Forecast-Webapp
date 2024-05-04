@@ -12,6 +12,7 @@ import sunny from './assets/weathers images/sunny.png';
 import almostsunny from './assets/weathers images/almostsunny.png';
 import cloudy from './assets/weathers images/rain.png';
 import rainy from './assets/weathers images/rainy.png';
+import clear from './assets/weathers images/moon.png';
 
 
 export interface IWeatherImages {
@@ -25,20 +26,24 @@ export interface IWeatherImages {
 const WeatherImages: IWeatherImages = {
   WeatherImages: [
     {
-        type: 'sunny',
-        icon: sunny
+      type: 'sunny',
+      icon: sunny
     },
     {
-        type: 'almostsunny',
-        icon: almostsunny
+      type: 'almostsunny',
+      icon: almostsunny
     },
     {
-        type: 'cloudy',
-        icon: cloudy
+      type: 'clouds',
+      icon: cloudy
     },
     {
-        type: 'rainy',
-        icon: rainy
+      type: 'rain',
+      icon: rainy
+    },
+    {
+      type: 'clear',
+      icon: clear
     },
   ]
 };
@@ -46,26 +51,27 @@ const WeatherImages: IWeatherImages = {
 export interface IWeatherData {
   name: string;
   main: {
-      feels_like: number;
-      humidity: number;
-      pressure: number;
-      temp:number;
+    feels_like: number;
+    humidity: number;
+    pressure: number;
+    temp: number;
   };
   weather: {
-      main: string;
-      description: string;
+    main: string;
+    description: string;
   }[];
   wind: {
-      speed: number;
+    speed: number;
   };
-  sys:{
-      sunrise:number;
-      sunset:number;
+  sys: {
+    sunrise: number;
+    sunset: number;
   };
-  coord:{
-    lon:number;
-    lat:number;
-  }
+  coord: {
+    lon: number;
+    lat: number;
+  };
+  dt: number
 }
 
 export interface IDailyWeather {
@@ -76,11 +82,11 @@ export interface IDailyWeather {
     }[];
     dt_txt: string;
     main: {
-      temp_max:number;
-  };
-  wind: {
-    speed: number;
-  };
+      temp_max: number;
+    };
+    wind: {
+      speed: number;
+    };
   }[];
 }
 
@@ -90,107 +96,111 @@ function App() {
   const [darkMode, setDarkMode] = useState<boolean | undefined>(undefined);
   const [dailyWeather, setDailyWeather] = useState<IDailyWeather | null>(null)
   const [search, setSearch] = useState<string>("");
-  const [weatherData, setWeatherData] = useState<IWeatherData | null >(null);
+  const [weatherData, setWeatherData] = useState<IWeatherData | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const lon = weatherData?.coord.lon;
-  const lat = weatherData?.coord.lat;
-
 
   useEffect(() => {
     // Setup Darkmode 
     localStorage.setItem('dark_mode', darkMode ? 'dark' : 'light');
     if (localStorage.getItem('dark_mode') === 'dark') {
-      setDarkMode(true)
+      setDarkMode(true);
     } else {
-      setDarkMode(false)
+      setDarkMode(false);
     }
-
+  
     // Get Weather at Current Location
     navigator.geolocation.getCurrentPosition((pos) => {
-      const lat = pos.coords.latitude;
-      const lon = pos.coords.longitude;
-      fetch(`${apiBase}weather?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`)
+      const { latitude, longitude } = pos.coords;
+      console.log(longitude, latitude);
+      fetch(`${apiBase}weather?lat=${latitude}&lon=${longitude}&units=metric&appid=${apiKey}`)
         .then(response => response.json())
-        .then((data: IWeatherData) => setWeatherData(data));
+        .then((data: IWeatherData) => {
+          setWeatherData(data);
+          // Fetch daily weather only if weatherData is available
+          if (data?.coord) {
+            fetchDailyWeather(data.coord.lat, data.coord.lon);
+          }
+        });
     });
-
+  
+  }, [apiBase, apiKey, darkMode]);
+  
+  const fetchDailyWeather = (lat: number, lon: number) => {
     fetch(`${apiBase}forecast?lat=${lat}&lon=${lon}&appid=${apiKey}`)
-    .then((response) =>{
-      if(!response.ok){
-        throw new Error('Not found')
-      }
-      return response.json()
-    })
-    .then((data:IDailyWeather)=>{
-      console.log(data)
-      setDailyWeather(data)
-    })
-    .catch((err:Error) =>{
-      console.log("Error fetching weather data:", err)
-    })
-
-  }, [darkMode , weatherData]);
-  
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Not found');
+        }
+        return response.json();
+      })
+      .then((data: IDailyWeather) => {
+        setDailyWeather(data);
+      })
+      .catch((err: Error) => {
+        console.log("Error fetching daily weather data:", err);
+      });
+  };
   
 
-  const handleSearchInput = (e: React.ChangeEvent<HTMLInputElement>) =>{
-    const searchValue= e.target.value;
+
+  const handleSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const searchValue = e.target.value;
     setSearch(searchValue);
   }
 
   // Check Weather for any location (By City Name)
-  const handleSubmit = (e:React.FormEvent<HTMLButtonElement>) => {
+  const handleSubmit = (e: React.FormEvent<HTMLButtonElement>) => {
     e.preventDefault();
     fetch(`${apiBase}weather?q=${search}&units=metric&APPID=${apiKey}`)
-    .then((response) =>{
-      if(!response.ok){
-        throw new Error('Not found')
-      }
-      return response.json()
-    })
-    .then((data: IWeatherData)=>{
-      setWeatherData(data);
-      inputRef.current ? inputRef.current.value = "" : inputRef; 
-    })
-    .catch((err:Error) =>{
-      console.log("Error fetching weather data:", err)
-    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Not found')
+        }
+        return response.json()
+      })
+      .then((data: IWeatherData) => {
+        setWeatherData(data);
+        inputRef.current ? inputRef.current.value = "" : inputRef;
+      })
+      .catch((err: Error) => {
+        console.log("Error fetching weather data:", err)
+      })
   }
 
   return (
-    <div className={`bg-gradient-to-l min-h-[100vh] ${darkMode ? 'dark from-zinc-900 to-zinc-600' :' from-zinc-400 to-zinc-50 ' }`}>
+    <div className={`bg-gradient-to-l min-h-[100vh] ${darkMode ? 'dark from-zinc-900 to-zinc-600' : ' from-zinc-400 to-zinc-50 '}`}>
       <div className={`container mx-auto dark:text-white px-4`}>
         <header className='flex justify-between items-center gap-4 py-6'>
           {/* ********************************** Start Navbar Section ********************************* */}
           <div className='flex flex-col items-center flex-col'>
             {
               darkMode === true ? (
-                <button onClick={()=>{setDarkMode(false)}}><PiToggleLeftFill className='text-[2rem]'/></button>
-              ):(
-                <button className="" onClick={()=>{setDarkMode(true)}}><PiToggleRightLight className='text-[2rem]'/></button>
+                <button onClick={() => { setDarkMode(false) }}><PiToggleLeftFill className='text-[2rem]' /></button>
+              ) : (
+                <button className="" onClick={() => { setDarkMode(true) }}><PiToggleRightLight className='text-[2rem]' /></button>
               )
             }
-            { !darkMode ? (<span className='hidden	md:block'> Light Mode </span>) : (<span className='hidden	md:block'> Dark Mode </span>)}
+            {!darkMode ? (<span className='hidden	md:block'> Light Mode </span>) : (<span className='hidden	md:block'> Dark Mode </span>)}
           </div>
           <div className='max-w-[65%] flex gap-2 grow px-4 py-1 rounded-full  bg-zinc-300 border-black dark:bg-zinc-700 shadow-lg shadow-zinc-500/20 dark:shadow-zinc-800/20'>
-            <button onClick={handleSubmit}><TbMapSearch/></button>
-            <input className=' grow bg-transparent focus:outline-none' ref={inputRef} onChange={handleSearchInput} type='search' placeholder='Please Enter The City'/>
+            <button onClick={handleSubmit}><TbMapSearch /></button>
+            <input className=' grow bg-transparent focus:outline-none' ref={inputRef} onChange={handleSearchInput} type='search' placeholder='Please Enter The City' />
           </div>
-          <button className='flex justify-between items-center bg-lime-600 rounded-full px-4 py-3'><MdMyLocation className='md:mr-1'/>  <span className='hidden	md:block'>Current Location</span></button>
+          <button className='flex justify-between items-center bg-lime-600 rounded-full px-4 py-3'><MdMyLocation className='md:mr-1' />  <span className='hidden	md:block'>Current Location</span></button>
         </header>
         {/* ********************************** End Navbar Section *********************************** */}
 
         {/* ********************************** Start Main Section *********************************** */}
         <main className='flex gap-6 flex-col md:flex-row py-6'>
           <Date city={weatherData?.name} />
-          <WeatherComponent weatherData= {weatherData} WeatherImages= {WeatherImages}/>
+          <WeatherComponent weatherData={weatherData} WeatherImages={WeatherImages} />
         </main>
         {/* ********************************** End Main Section ************************************* */}
 
         {/* ********************************** Start Main Section *********************************** */}
-        <section className='flex gap-6 flex-col md:flex-row py-6'>
-          <WeeklyForecast dailyWeather={dailyWeather} WeatherImages= {WeatherImages}/>
-          <HourlyComponent dailyWeather={dailyWeather} WeatherImages= {WeatherImages}/>
+        <section className='flex gap-6 flex-col lg:flex-row py-6'>
+          <WeeklyForecast weatherData={weatherData} dailyWeather={dailyWeather} WeatherImages={WeatherImages} />
+          <HourlyComponent weatherData={weatherData} dailyWeather={dailyWeather} WeatherImages={WeatherImages} />
         </section>
         {/* ********************************** End Main Section ************************************* */}
 

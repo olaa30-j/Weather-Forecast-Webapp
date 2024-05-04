@@ -11,7 +11,8 @@ interface WeatherConfig {
     WeatherImages: IWeatherImages | null,
 }
 
-const WeatherComponent: React.FC<WeatherConfig> = ({ weatherData }) => {
+const WeatherComponent: React.FC<WeatherConfig> = ({ weatherData, WeatherImages }) => {
+    console.log(weatherData)
     let sunriseTimeString = '';
     let sunsetTimeString = '';
 
@@ -51,9 +52,20 @@ const WeatherComponent: React.FC<WeatherConfig> = ({ weatherData }) => {
 
             <div className='flex md:flex-col flex-row-reverse justify-center items-center'>
                 <div className='max-w-[70%] md:max-w-[100%] weather_img_container'>
-                    {/* <img src={rainy} alt='weather image'/> */}
+                {
+                    weatherData?.weather && WeatherImages?.WeatherImages && (
+                        WeatherImages.WeatherImages.map((data, index) => (
+                        weatherData.weather[0].main === data.type ? (
+                            <img key={index} src={data.icon} alt='weather image' />
+                        ) : 
+                        weatherData.weather[0].description.includes(data.type)  ? (
+                            <img key={index} src={data.icon} alt='weather image' />
+                        ) : null
+                        ))
+                    )
+                }
                 </div>
-                <h4>{weatherData?.weather[0].main}</h4>
+                <h4>{weatherData?.weather[0].description}</h4>
             </div>
 
             <div className='w-[65%]'>
