@@ -19,7 +19,7 @@ const HourlyComponent: React.FC<WeatherConfig> = ({ dailyWeather , weatherData, 
             <div key={index} className={`flex md:flex-col gap-4 px-3 py-2 items-center rounded-3xl bg-gradient-to-b from-orange-400 to-orange-100`}>
               <span>{data.dt_txt.slice(11 , 16)}</span>
 
-              <div className='max-w-[100%]'>
+              <div className='w-[100%] md:max-w-[100%]'>
               {
                   weatherData?.weather && WeatherImages?.WeatherImages && (
                     WeatherImages.WeatherImages.map((data, index) => (
@@ -35,7 +35,7 @@ const HourlyComponent: React.FC<WeatherConfig> = ({ dailyWeather , weatherData, 
               </div>
 
               <h6 className="ml-3">{data.main.temp_max}'C</h6>
-              <div className='max-w-[75%] md:max-w-[60%] '>
+              <div className='max-w-[100%] md:max-w-[75%] '>
                 <img src={arrow} alt="img" />
               </div>
               <span>{data.wind.speed}km/h</span>
